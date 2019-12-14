@@ -13,12 +13,12 @@ type API struct {
 
 // RootResponse describes the response of the root endpoint.
 type RootResponse struct {
-	Service string
+	Service string `json:"service"`
 }
 
 // ErrorResponse describes an error response for any endpoint.
 type ErrorResponse struct {
-	Description string
+	Description string `json:"description"`
 }
 
 // RootHandler handles GET requests to the / endpoint.

@@ -20,7 +20,7 @@ package api
 // responses:
 //   200: rootResponse
 
-// General information about hte API.
+// General information about the API.
 // swagger:response rootResponse
 type rootResponseWrapper struct {
 	// in:body
