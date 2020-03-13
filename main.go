@@ -20,8 +20,8 @@ func buildLoggerEntry() *logrus.Entry {
 
 	// Return the custom log entry.
 	return logrus.WithFields(logrus.Fields{
-		"service": "app-exposer",
-		"art-id":  "app-exposer",
+		"service": "requests",
+		"art-id":  "requests",
 		"group":   "org.cyverse",
 	})
 }
@@ -32,13 +32,27 @@ func main() {
 	// Set a custom logger.
 	e.Logger = Logger{Entry: buildLoggerEntry()}
 
+	// Add middleware.
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(redoc.Serve(redoc.Opts{Title: "DE Administrative Requests API Documentation"}))
 
-	a := api.API{Echo: e}
+	// Load the service information from the Swagger JSON.
+	serviceInfo, err := getSwaggerServiceInfo()
+	if err != nil {
+		e.Logger.Fatal(err)
+	}
 
+	// Define the API.
+	a := api.API{
+		Echo:    e,
+		Title:   serviceInfo.Title,
+		Version: serviceInfo.Version,
+	}
+
+	// Define the API endpoints.
 	e.GET("/", a.RootHandler)
 
+	// Start the service.
 	e.Logger.Fatal(e.Start(":8080"))
 }
