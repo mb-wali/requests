@@ -15,6 +15,8 @@
 // swagger:meta
 package api
 
+import "github.com/cyverse-de/requests/model"
+
 // swagger:route GET / misc getRoot
 // Returns general information about the API.
 // responses:
@@ -30,5 +32,18 @@ type rootResponseWrapper struct {
 // Basic error response.
 // swagger:response errorResponse
 type errorResponseWrapper struct {
+	// in:body
 	Body ErrorResponse
+}
+
+// swagger:route GET /request-types request-types getRequestTypes
+// Returns the list of registered request types.
+// responses:
+//    200: requestTypeListing
+
+// Request type listing response.
+// swagger:response requestTypeListing
+type requestTypeListingWrapper struct {
+	// in:body
+	Body model.RequestTypeListing
 }

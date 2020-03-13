@@ -21,7 +21,7 @@ type PartialSwagger struct {
 
 // getSwaggerServiceInfo obtains service information from a file called swagger.json in the current working directory.
 func getSwaggerServiceInfo() (*SwaggerServiceInfo, error) {
-	wrapMsg := "Unable to load the Swagger JSON"
+	wrapMsg := "unable to load the Swagger JSON"
 
 	// Open the file containing the Swagger JSON.
 	file, err := os.Open("swagger.json")

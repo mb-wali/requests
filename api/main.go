@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -11,6 +12,7 @@ type API struct {
 	Echo    *echo.Echo
 	Title   string
 	Version string
+	DB      *sql.DB
 }
 
 // RootResponse describes the response of the root endpoint.
