@@ -68,6 +68,16 @@ type requestTypeListingWrapper struct {
 //   200: requestType
 //   400: errorResponse
 
+// swagger:route GET /request-types/{name} request-types getRequestType
+//
+// Get a Request Type by Name
+//
+// This endpoint returns the request type with the given name if one exists.
+//
+// responses:
+//   200: requestType
+//   404: errorResponse
+
 // Request type response.
 // swagger:response requestType
 type requestTypeWrapper struct {
@@ -76,7 +86,7 @@ type requestTypeWrapper struct {
 }
 
 // Parameters for registering a request type.
-// swagger:parameters registerRequestType
+// swagger:parameters registerRequestType getRequestType
 type registerRequestTypeParameters struct {
 	// the name of the request type being registered
 	//

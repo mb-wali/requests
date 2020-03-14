@@ -56,7 +56,7 @@ func (a *API) RegisterRequestTypeHandler(ctx echo.Context) error {
 	err := validateRequestTypeName(name)
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
-			Description: err.Error(),
+			Message: err.Error(),
 		})
 	}
 
@@ -96,5 +96,38 @@ func (a *API) RegisterRequestTypeHandler(ctx echo.Context) error {
 	}
 
 	// Return the response.
+	return ctx.JSON(http.StatusOK, requestType)
+}
+
+// GetRequestTypeHandler handles GET requests to the /request-types/{name} endpoint.
+func (a *API) GetRequestTypeHandler(ctx echo.Context) error {
+	name := ctx.Param("name")
+
+	// Start a transaction.
+	tx, err := a.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Get the request type.
+	requestType, err := db.GetRequestType(tx, name)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Commit the transaction.
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Return the response.
+	if requestType == nil {
+		return ctx.JSON(http.StatusNotFound, ErrorResponse{
+			Message: "not found",
+		})
+	}
 	return ctx.JSON(http.StatusOK, requestType)
 }

@@ -30,7 +30,7 @@ type RootResponse struct {
 
 // ErrorResponse describes an error response for any endpoint.
 type ErrorResponse struct {
-	Description string `json:"description"`
+	Message string `json:"message"`
 }
 
 // RootHandler handles GET requests to the / endpoint.

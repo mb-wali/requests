@@ -93,6 +93,7 @@ func main() {
 	e.GET("/", a.RootHandler)
 	e.GET("/request-types", a.GetRequestTypesHandler)
 	e.POST("/request-types/:name", a.RegisterRequestTypeHandler)
+	e.GET("/request-types/:name", a.GetRequestTypeHandler)
 
 	// Start the service.
 	e.Logger.Info("starting the service")
