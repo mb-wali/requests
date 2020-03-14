@@ -92,6 +92,7 @@ func main() {
 	// Define the API endpoints.
 	e.GET("/", a.RootHandler)
 	e.GET("/request-types", a.GetRequestTypesHandler)
+	e.POST("/request-types/:name", a.RegisterRequestTypeHandler)
 
 	// Start the service.
 	e.Logger.Info("starting the service")
