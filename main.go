@@ -94,6 +94,7 @@ func main() {
 	e.GET("/request-types", a.GetRequestTypesHandler)
 	e.POST("/request-types/:name", a.RegisterRequestTypeHandler)
 	e.GET("/request-types/:name", a.GetRequestTypeHandler)
+	e.GET("/request-status-codes", a.GetRequestStatusCodesHandler)
 
 	// Start the service.
 	e.Logger.Info("starting the service")

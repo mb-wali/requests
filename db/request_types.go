@@ -7,6 +7,8 @@ import (
 	"github.com/cyverse-de/requests/model"
 )
 
+// requestTypesFromRows converts SQL rows to an array of request types. The column order is always expected to be ID,
+// and name.
 func requestTypesFromRows(rows *sql.Rows) ([]*model.RequestType, error) {
 	requestTypes := make([]*model.RequestType, 0)
 

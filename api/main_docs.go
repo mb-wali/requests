@@ -93,3 +93,19 @@ type registerRequestTypeParameters struct {
 	// in:path
 	Name string
 }
+
+// swagger:route GET /request-status-codes request-status-codes getRequestStatusCodes
+//
+// List Request Status Codes
+//
+// This endpoint lists all of the request status codes that have been registered.
+//
+// responses:
+//    200: requestStatusCodeListing
+
+// Request status code listing response.
+// swagger:response requestStatusCodeListing
+type requestStatusCodeListingWrapper struct {
+	// in:body
+	Body model.RequestStatusCodeListing
+}
