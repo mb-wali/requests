@@ -109,3 +109,34 @@ type requestStatusCodeListingWrapper struct {
 	// in:body
 	Body model.RequestStatusCodeListing
 }
+
+// swagger:route POST /requests requests submitRequest
+//
+// Submit a Request
+//
+// This endpoint submits a new administrative request.
+//
+// Responses:
+//   200: requestSummary
+
+// Request summary information.
+// swagger:response requestSummary
+type requestSummaryWrapper struct {
+	// in:body
+	Body model.RequestSummary
+}
+
+// Parameters for the request submission endpoint.
+// swagger:parameters submitRequest
+type requestSubmission struct {
+	// The request submission
+	//
+	// in:body
+	Body model.RequestSubmission
+
+	// The username of the authenticated user
+	//
+	// in:query
+	// required:true
+	User *string `json:"user"`
+}

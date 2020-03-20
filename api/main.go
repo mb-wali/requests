@@ -9,10 +9,11 @@ import (
 
 // API defines REST API of the requests service.
 type API struct {
-	Echo    *echo.Echo
-	Title   string
-	Version string
-	DB      *sql.DB
+	Echo       *echo.Echo
+	Title      string
+	Version    string
+	DB         *sql.DB
+	UserDomain string
 }
 
 // RootResponse describes the response of the root endpoint.

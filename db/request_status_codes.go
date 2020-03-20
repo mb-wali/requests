@@ -38,3 +38,27 @@ func ListRequestStatusCodes(tx *sql.Tx) ([]*model.RequestStatusCode, error) {
 	// Return the list of rows.
 	return requestStatusCodesFromRows(rows)
 }
+
+// GetRequestStatusCode looks the status code with the given name.
+func GetRequestStatusCode(tx *sql.Tx, status string) (*model.RequestStatusCode, error) {
+	query := "SELECT id, name, display_name, email_template FROM request_status_codes WHERE name = $1"
+
+	// Query the database.
+	rows, err := tx.Query(query, status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Get the request status code information.
+	requestStatusCodes, err := requestStatusCodesFromRows(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the matching status code if there is one.
+	if len(requestStatusCodes) == 0 {
+		return nil, nil
+	}
+	return requestStatusCodes[0], nil
+}

@@ -10,6 +10,7 @@ import (
 	"github.com/cyverse-de/echo-middleware/redoc"
 	"github.com/cyverse-de/requests/api"
 	"github.com/cyverse-de/requests/db"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/sirupsen/logrus"
@@ -48,11 +49,24 @@ func buildLoggerEntry() *logrus.Entry {
 	})
 }
 
+// CustomValidator represents a validator that Echo can use to check incoming requests.
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+// Validate performs validation for an incoming request.
+func (cv CustomValidator) Validate(i interface{}) error {
+	return cv.validator.Struct(i)
+}
+
 func main() {
 	e := echo.New()
 
 	// Set a custom logger.
 	e.Logger = Logger{Entry: buildLoggerEntry()}
+
+	// Register a custom validator.
+	e.Validator = &CustomValidator{validator: validator.New()}
 
 	// Add middleware.
 	e.Use(middleware.Logger())
@@ -83,10 +97,11 @@ func main() {
 
 	// Define the API.
 	a := api.API{
-		Echo:    e,
-		Title:   serviceInfo.Title,
-		Version: serviceInfo.Version,
-		DB:      db,
+		Echo:       e,
+		Title:      serviceInfo.Title,
+		Version:    serviceInfo.Version,
+		DB:         db,
+		UserDomain: cfg.GetString("users.domain"),
 	}
 
 	// Define the API endpoints.
@@ -95,6 +110,7 @@ func main() {
 	e.POST("/request-types/:name", a.RegisterRequestTypeHandler)
 	e.GET("/request-types/:name", a.GetRequestTypeHandler)
 	e.GET("/request-status-codes", a.GetRequestStatusCodesHandler)
+	e.POST("/requests", a.AddRequestHandler)
 
 	// Start the service.
 	e.Logger.Info("starting the service")

@@ -6,6 +6,7 @@ require (
 	github.com/cyverse-de/configurate v0.0.0-20190318152107-8f767cb828d9
 	github.com/cyverse-de/dbutil v0.0.0-20170404194641-04e85e2737c9
 	github.com/cyverse-de/echo-middleware v0.1.0
+	github.com/go-playground/validator/v10 v10.2.0
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.3.0
 	github.com/lib/pq v1.3.0
