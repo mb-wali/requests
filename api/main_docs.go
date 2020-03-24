@@ -128,7 +128,7 @@ type requestSummaryWrapper struct {
 
 // Parameters for the request submission endpoint.
 // swagger:parameters submitRequest
-type requestSubmission struct {
+type requestSubmissionParameters struct {
 	// The request submission
 	//
 	// in:body
@@ -139,4 +139,29 @@ type requestSubmission struct {
 	// in:query
 	// required:true
 	User *string `json:"user"`
+}
+
+// swagger:route GET /requests/{id} requests getRequestInformation
+//
+// Get Request Information
+//
+// This endpoint returns information about the request with the given identifier.
+//
+// Responses:
+//   200: requestDetails
+
+// Request detail information.
+// swagger:response requestDetails
+type requestDetailsWrapper struct {
+	// in:body
+	Body model.RequestDetails
+}
+
+// Parameters for the request details endpoing.
+// swagger:parameters getRequestInformation
+type getRequestInformationParameters struct {
+	// The request ID
+	//
+	// in:path
+	ID *string
 }

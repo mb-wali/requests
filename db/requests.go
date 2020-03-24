@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/cyverse-de/requests/model"
+
 	"github.com/pkg/errors"
 )
 
@@ -40,4 +42,77 @@ func AddRequest(tx *sql.Tx, userID, requestTypeID string, details interface{}) (
 	}
 
 	return requestID, nil
+}
+
+// GetRequestStatusUpdates looks up the status updates for a request.
+func GetRequestStatusUpdates(tx *sql.Tx, requestID string) ([]*model.RequestUpdate, error) {
+	query := `SELECT ru.id, rsc.name, regexp_replace(u.username, '@.*', ''), ru.created_date, ru.message
+			  FROM request_updates ru
+			  JOIN request_status_codes rsc ON ru.request_status_code_id = rsc.id
+			  JOIN users u ON ru.updating_user_id = u.id
+			  WHERE ru.request_id = $1
+			  ORDER BY ru.created_date`
+
+	// Query the database.
+	rows, err := tx.Query(query, requestID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Build the array of status updates.
+	updates := make([]*model.RequestUpdate, 0)
+	for rows.Next() {
+		var update model.RequestUpdate
+		err := rows.Scan(&update.ID, &update.StatusCode, &update.UpdatingUser, &update.CreatedDate, &update.Message)
+		if err != nil {
+			return nil, err
+		}
+		updates = append(updates, &update)
+	}
+	return updates, nil
+}
+
+// GetRequestDetails looks up the details of a request.
+func GetRequestDetails(tx *sql.Tx, id string) (*model.RequestDetails, error) {
+	query := `SELECT r.id, regexp_replace(u.username, '@.*', ''), rt.name, r.details
+			  FROM requests r
+			  JOIN users u ON r.requesting_user_id = u.id
+			  JOIN request_types rt ON r.request_type_id = rt.id
+			  WHERE r.id = $1`
+
+	// Query the database.
+	rows, err := tx.Query(query, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Just return nil if there aren't any rows.
+	if !rows.Next() {
+		return nil, nil
+	}
+
+	// Extract the request details.
+	var rd model.RequestDetails
+	var rdDetails string
+	err = rows.Scan(&rd.ID, &rd.RequestingUser, &rd.RequestType, &rdDetails)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(rdDetails), &rd.Details)
+	if err != nil {
+		return nil, err
+	}
+
+	// The rows have to be closed before we can make additional queries.
+	rows.Close()
+
+	// Add status information to the request details.
+	rd.Updates, err = GetRequestStatusUpdates(tx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rd, nil
 }

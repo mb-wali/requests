@@ -141,11 +141,46 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 		return err
 	}
 
-	// Extract the request body.
+	// Build the response body.
 	return ctx.JSON(http.StatusOK, model.RequestSummary{
 		ID:             requestID,
 		RequestingUser: user,
 		RequestType:    requestSubmission.RequestType,
 		Details:        requestSubmission.Details,
 	})
+}
+
+// GetRequestDetailsHandler handles GET requests to the /requests/:id endpoint.
+func (a *API) GetRequestDetailsHandler(ctx echo.Context) error {
+	id := ctx.Param("id")
+	var err error
+
+	// Start a transaction
+	tx, err := a.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Look up the request details.
+	requestDetails, err := db.GetRequestDetails(tx, id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if requestDetails == nil {
+		tx.Rollback()
+		return ctx.JSON(http.StatusNotFound, &ErrorResponse{
+			Message: fmt.Sprintf("request %s not found", id),
+		})
+	}
+
+	// Commit the transaction.
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Return the response.
+	return ctx.JSON(http.StatusOK, requestDetails)
 }

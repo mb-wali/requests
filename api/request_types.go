@@ -126,7 +126,7 @@ func (a *API) GetRequestTypeHandler(ctx echo.Context) error {
 	// Return the response.
 	if requestType == nil {
 		return ctx.JSON(http.StatusNotFound, ErrorResponse{
-			Message: "not found",
+			Message: fmt.Sprintf("request type %s not found", name),
 		})
 	}
 	return ctx.JSON(http.StatusOK, requestType)
