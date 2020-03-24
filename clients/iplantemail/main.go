@@ -52,7 +52,7 @@ func (c *Client) SendRequestSubmittedEmail(emailAddress, templateName string, re
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		respBody, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return fmt.Errorf(errorMessage)
+			return errors.Wrap(err, errorMessage)
 		}
 		return fmt.Errorf("%s: %s", errorMessage, respBody)
 	}

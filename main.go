@@ -4,6 +4,10 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/cyverse-de/requests/clients/iplantgroups"
+
+	"github.com/cyverse-de/requests/clients/iplantemail"
+
 	_ "github.com/lib/pq"
 
 	"github.com/cyverse-de/configurate"
@@ -95,13 +99,25 @@ func main() {
 		e.Logger.Fatalf("service initialization failed: %s", err.Error())
 	}
 
+	// Create the iplant-email client.
+	iplantEmailClient := iplantemail.NewClient(cfg.GetString("iplant_email.base"))
+
+	// Create the iplant-groups client.
+	iplantGroupsClient := iplantgroups.NewClient(
+		cfg.GetString("iplant_groups.base"),
+		cfg.GetString("iplant_groups.user"),
+	)
+
 	// Define the API.
 	a := api.API{
-		Echo:       e,
-		Title:      serviceInfo.Title,
-		Version:    serviceInfo.Version,
-		DB:         db,
-		UserDomain: cfg.GetString("users.domain"),
+		Echo:               e,
+		Title:              serviceInfo.Title,
+		Version:            serviceInfo.Version,
+		DB:                 db,
+		UserDomain:         cfg.GetString("users.domain"),
+		AdminEmail:         cfg.GetString("email.request"),
+		IPlantEmailClient:  iplantEmailClient,
+		IPlantGroupsClient: iplantGroupsClient,
 	}
 
 	// Define the API endpoints.

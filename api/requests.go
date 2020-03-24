@@ -1,7 +1,7 @@
 package api
 
 import (
-	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -12,21 +12,24 @@ import (
 	"github.com/labstack/echo"
 )
 
-// updateRequestStatus updates the status of a request.
-func (a *API) updateRequestStatus(tx *sql.Tx, requestID, status, userID, message string) error {
-	var err error
+// copyRequestDetails makes a one-level-deep copy of a map. For copying request details, we only need to go one level
+// deep because this service doesn't need to modify anything below the top level of the map.
+func copyRequestDetails(requestDetails map[string]interface{}) map[string]interface{} {
+	copy := make(map[string]interface{})
+	for k, v := range requestDetails {
+		copy[k] = v
+	}
+	return copy
+}
 
-	// Look up the request status code.
-	requestStatusCode, err := db.GetRequestStatusCode(tx, status)
+// formatRequestDetails builds a human readable representation of a set of request details. For now, we're just going
+// to turn it into a pretty-printed JSON document.
+func formatRequestDetails(requestDetails map[string]interface{}) (string, error) {
+	formattedDetails, err := json.MarshalIndent(requestDetails, "", "  ")
 	if err != nil {
-		return err
+		return "", err
 	}
-	if requestStatusCode == nil {
-		return fmt.Errorf("request status code not found: %s", status)
-	}
-
-	// Store the status request status update in the database.
-	return db.AddRequestStatusUpdate(tx, requestID, requestStatusCode.ID, userID, message)
+	return string(formattedDetails), nil
 }
 
 // AddRequestHandler handles POST requests to the /requests endpoint.
@@ -93,8 +96,39 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 		return err
 	}
 
+	// Look up the request status code.
+	requestStatusCode, err := db.GetRequestStatusCode(tx, "submitted")
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if requestStatusCode == nil {
+		tx.Rollback()
+		return fmt.Errorf("request status code not found: submitted")
+	}
+
 	// Store the request update in the database.
-	err = a.updateRequestStatus(tx, requestID, "submitted", userID, "Request submitted.")
+	err = db.AddRequestStatusUpdate(tx, requestID, requestStatusCode.ID, userID, "Request submitted.")
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Format a human readable copy of the request submission details.
+	humanReadableRequestDetails, err := formatRequestDetails(requestSubmission.Details.(map[string]interface{}))
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Add required information to a copy of the request details.
+	requestDetails := copyRequestDetails(requestSubmission.Details.(map[string]interface{}))
+	requestDetails["username"] = user
+	requestDetails["request_type"] = requestType.Name
+	requestDetails["request_details"] = humanReadableRequestDetails
+
+	// Send the email.
+	err = a.IPlantEmailClient.SendRequestSubmittedEmail(a.AdminEmail, requestStatusCode.EmailTemplate, requestDetails)
 	if err != nil {
 		tx.Rollback()
 		return err

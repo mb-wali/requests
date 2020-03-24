@@ -4,16 +4,21 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/cyverse-de/requests/clients/iplantemail"
+	"github.com/cyverse-de/requests/clients/iplantgroups"
 	"github.com/labstack/echo"
 )
 
 // API defines REST API of the requests service.
 type API struct {
-	Echo       *echo.Echo
-	Title      string
-	Version    string
-	DB         *sql.DB
-	UserDomain string
+	Echo               *echo.Echo
+	Title              string
+	Version            string
+	DB                 *sql.DB
+	UserDomain         string
+	AdminEmail         string
+	IPlantEmailClient  *iplantemail.Client
+	IPlantGroupsClient *iplantgroups.Client
 }
 
 // RootResponse describes the response of the root endpoint.
