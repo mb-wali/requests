@@ -160,8 +160,13 @@ func (a *API) GetRequestsHandler(ctx echo.Context) error {
 		return err
 	}
 
+	// Build the request listing obtions.
+	options := &db.RequestListingOptions{
+		IncludeCompletedRequests: false,
+	}
+
 	// Get the list of matching requests.
-	requests, err := db.GetRequestListing(tx)
+	requests, err := db.GetRequestListing(tx, options)
 	if err != nil {
 		tx.Rollback()
 		return err

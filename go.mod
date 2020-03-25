@@ -3,6 +3,7 @@ module github.com/cyverse-de/requests
 go 1.13
 
 require (
+	github.com/Masterminds/squirrel v1.2.0
 	github.com/cyverse-de/configurate v0.0.0-20190318152107-8f767cb828d9
 	github.com/cyverse-de/dbutil v0.0.0-20170404194641-04e85e2737c9
 	github.com/cyverse-de/echo-middleware v0.1.0

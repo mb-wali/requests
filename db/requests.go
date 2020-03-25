@@ -7,6 +7,8 @@ import (
 
 	"github.com/cyverse-de/requests/model"
 
+	sq "github.com/Masterminds/squirrel"
+
 	"github.com/pkg/errors"
 )
 
@@ -44,15 +46,39 @@ func AddRequest(tx *sql.Tx, userID, requestTypeID string, details interface{}) (
 	return requestID, nil
 }
 
+// RequestListingOptions represents options that can be used to filter a request listing.
+type RequestListingOptions struct {
+	IncludeCompletedRequests bool
+}
+
 // GetRequestListing obtains a list of requests from the database.
-func GetRequestListing(tx *sql.Tx) ([]*model.RequestSummary, error) {
-	query := `SELECT r.id, regexp_replace(u.username, '@.*', ''), rt.name, r.details
-			  FROM requests r
-			  JOIN users u ON r.requesting_user_id = u.id
-			  JOIN request_types rt ON r.request_type_id = rt.id`
+func GetRequestListing(tx *sql.Tx, options *RequestListingOptions) ([]*model.RequestSummary, error) {
+	base := sq.StatementBuilder.
+		PlaceholderFormat(sq.Dollar).
+		Select("r.id, regexp_replace(u.username, '@.*', ''), rt.name, r.details").
+		From("requests r").
+		Join("users u ON r.requesting_user_id = u.id").
+		Join("request_types rt ON r.request_type_id = rt.id")
+
+	// Add the filter to omit completed requests if we're not supposed to include them in the listing.
+	if !options.IncludeCompletedRequests {
+		nestedBuilder := sq.StatementBuilder.
+			Select("*").
+			Prefix("NOT EXISTS (").
+			From("request_updates ru").
+			Join("request_status_codes rsc ON ru.request_status_code_id = rsc.id").
+			Where("ru.request_id = r.id").
+			Where(sq.Eq{"rsc.name": []string{"complete", "rejected"}}).
+			Suffix(")")
+		base = base.Where(nestedBuilder)
+	}
+	query, args, err := base.ToSql()
+	if err != nil {
+		return nil, err
+	}
 
 	// Query the database.
-	rows, err := tx.Query(query)
+	rows, err := tx.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
