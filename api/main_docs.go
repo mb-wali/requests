@@ -141,6 +141,22 @@ type requestSubmissionParameters struct {
 	User *string `json:"user"`
 }
 
+// swagger:route GET /requests requests listRequests
+//
+// List Requests
+//
+// This endpoint lists existing requests.
+//
+// Responses:
+//   200: requestListing
+
+// Request listing.
+// swagger:response requestListing
+type requestListingWrapper struct {
+	// in:body
+	Body model.RequestListing
+}
+
 // swagger:route GET /requests/{id} requests getRequestInformation
 //
 // Get Request Information

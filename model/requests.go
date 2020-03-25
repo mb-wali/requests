@@ -26,6 +26,12 @@ type RequestSummary struct {
 	Details interface{} `json:"details"`
 }
 
+// RequestListing represents a list of requests.
+type RequestListing struct {
+	// The list of requests.
+	Requests []*RequestSummary `json:"requests"`
+}
+
 // RequestUpdate represents a request status update.
 type RequestUpdate struct {
 	// The request update ID

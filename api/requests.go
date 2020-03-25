@@ -150,6 +150,36 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 	})
 }
 
+// GetRequestsHandler handles GET requests to the /requests endpoint.
+func (a *API) GetRequestsHandler(ctx echo.Context) error {
+	var err error
+
+	// Start a transaction.
+	tx, err := a.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Get the list of matching requests.
+	requests, err := db.GetRequestListing(tx)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Commit the transaction.
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Return the listing.
+	return ctx.JSON(http.StatusOK, &model.RequestListing{
+		Requests: requests,
+	})
+}
+
 // GetRequestDetailsHandler handles GET requests to the /requests/:id endpoint.
 func (a *API) GetRequestDetailsHandler(ctx echo.Context) error {
 	id := ctx.Param("id")

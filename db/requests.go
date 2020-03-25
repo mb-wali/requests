@@ -44,6 +44,39 @@ func AddRequest(tx *sql.Tx, userID, requestTypeID string, details interface{}) (
 	return requestID, nil
 }
 
+// GetRequestListing obtains a list of requests from the database.
+func GetRequestListing(tx *sql.Tx) ([]*model.RequestSummary, error) {
+	query := `SELECT r.id, regexp_replace(u.username, '@.*', ''), rt.name, r.details
+			  FROM requests r
+			  JOIN users u ON r.requesting_user_id = u.id
+			  JOIN request_types rt ON r.request_type_id = rt.id`
+
+	// Query the database.
+	rows, err := tx.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Build the listing from the result set.
+	listing := make([]*model.RequestSummary, 0)
+	for rows.Next() {
+		var request model.RequestSummary
+		var requestDetails string
+		err = rows.Scan(&request.ID, &request.RequestingUser, &request.RequestingUser, &requestDetails)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal([]byte(requestDetails), &request.Details)
+		if err != nil {
+			return nil, err
+		}
+		listing = append(listing, &request)
+	}
+
+	return listing, nil
+}
+
 // GetRequestStatusUpdates looks up the status updates for a request.
 func GetRequestStatusUpdates(tx *sql.Tx, requestID string) ([]*model.RequestUpdate, error) {
 	query := `SELECT ru.id, rsc.name, regexp_replace(u.username, '@.*', ''), ru.created_date, ru.message

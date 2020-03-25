@@ -126,6 +126,7 @@ func main() {
 	e.POST("/request-types/:name", a.RegisterRequestTypeHandler)
 	e.GET("/request-types/:name", a.GetRequestTypeHandler)
 	e.GET("/request-status-codes", a.GetRequestStatusCodesHandler)
+	e.GET("/requests", a.GetRequestsHandler)
 	e.POST("/requests", a.AddRequestHandler)
 	e.GET("/requests/:id", a.GetRequestDetailsHandler)
 
