@@ -163,7 +163,12 @@ type requestListingParameters struct {
 	// Whether or not completed requests should be included in the listing
 	//
 	// in:query
-	IncludeCompleted *bool `json:"include-completed"`
+	IncludeCompleted bool `json:"include-completed"`
+
+	// If specified, only requests of the given type will be included in the listing
+	//
+	// in:query
+	RequestType string `json:"request-type"`
 }
 
 // swagger:route GET /requests/{id} requests getRequestInformation
