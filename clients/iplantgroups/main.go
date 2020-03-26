@@ -75,7 +75,6 @@ func (c *Client) GetUserInfo(username string) (*Subject, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, errorMessage)
 	}
-	fmt.Printf("Request URL: %s\n", requestURL)
 
 	// Submit the request.
 	resp, err := http.Get(requestURL)
