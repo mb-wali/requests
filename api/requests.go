@@ -173,6 +173,7 @@ func (a *API) GetRequestsHandler(ctx echo.Context) error {
 	options := &db.RequestListingOptions{
 		IncludeCompletedRequests: includeCompleted,
 		RequestType:              ctx.QueryParam("request-type"),
+		RequestingUser:           ctx.QueryParam("requesting-user"),
 	}
 
 	// Get the list of matching requests.

@@ -169,6 +169,11 @@ type requestListingParameters struct {
 	//
 	// in:query
 	RequestType string `json:"request-type"`
+
+	// If specified, only requests submitted by the user with the given username will be included in the listing
+	//
+	// in:query
+	RequestingUser string `json:"requesting-user"`
 }
 
 // swagger:route GET /requests/{id} requests getRequestInformation

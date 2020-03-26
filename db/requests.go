@@ -50,6 +50,7 @@ func AddRequest(tx *sql.Tx, userID, requestTypeID string, details interface{}) (
 type RequestListingOptions struct {
 	IncludeCompletedRequests bool
 	RequestType              string
+	RequestingUser           string
 }
 
 // GetRequestListing obtains a list of requests from the database.
@@ -77,6 +78,11 @@ func GetRequestListing(tx *sql.Tx, options *RequestListingOptions) ([]*model.Req
 	// Add the filter to limit the listing to requests of a given type if applicable.
 	if options.RequestType != "" {
 		base = base.Where(sq.Eq{"rt.name": options.RequestType})
+	}
+
+	// Add the filter to limit the listing to requests submitted by a user if applicable.
+	if options.RequestingUser != "" {
+		base = base.Where(sq.Eq{"regexp_replace(u.username, '@.*', '')": options.RequestingUser})
 	}
 
 	// Build the query.
