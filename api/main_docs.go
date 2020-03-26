@@ -157,6 +157,15 @@ type requestListingWrapper struct {
 	Body model.RequestListing
 }
 
+// Parameters for the request listing enpdoint.
+// swagger:parameters listRequests
+type requestListingParameters struct {
+	// Whether or not completed requests should be included in the listing
+	//
+	// in:query
+	IncludeCompleted *bool `json:"include-completed"`
+}
+
 // swagger:route GET /requests/{id} requests getRequestInformation
 //
 // Get Request Information

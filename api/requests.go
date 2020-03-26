@@ -160,9 +160,18 @@ func (a *API) GetRequestsHandler(ctx echo.Context) error {
 		return err
 	}
 
+	// Extract and validate the user query parameter.
+	defaultIncludeCompleted := false
+	includeCompleted, err := query.ValidateBooleanQueryParam(ctx, "include-completed", &defaultIncludeCompleted)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, &ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+
 	// Build the request listing obtions.
 	options := &db.RequestListingOptions{
-		IncludeCompletedRequests: false,
+		IncludeCompletedRequests: includeCompleted,
 	}
 
 	// Get the list of matching requests.
