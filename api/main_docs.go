@@ -134,7 +134,7 @@ type requestSubmissionParameters struct {
 	// in:body
 	Body model.RequestSubmission
 
-	// The username of the authenticated user
+	// The username of the person submitting the request
 	//
 	// in:query
 	// required:true
@@ -192,11 +192,47 @@ type requestDetailsWrapper struct {
 	Body model.RequestDetails
 }
 
-// Parameters for the request details endpoing.
+// Parameters for the request details endpoint.
 // swagger:parameters getRequestInformation
 type getRequestInformationParameters struct {
 	// The request ID
 	//
 	// in:path
 	ID *string
+}
+
+// swagger:route POST /requests/{id}/status requests updateRequestStatus
+//
+// Uppdate Request Status
+//
+// This endpoint allows administrators to update the status of a request.
+//
+// Responses:
+//   200: requestUpdate
+
+// Request update information.
+// swagger:response requestUpdate
+type requestUpdateWrapper struct {
+	// in:body
+	Body model.RequestUpdate
+}
+
+// Parameters for the request update endpoint.
+// swagger:parameters updateRequestStatus
+type updateRequestStatusParameters struct {
+	// The request ID
+	//
+	// in:path
+	ID *string
+
+	// The request update information
+	//
+	// in:body
+	Body model.RequestUpdateSubmission
+
+	// The username of the person updating the request
+	//
+	// in:query
+	// required:true
+	User *string `json:"user"`
 }

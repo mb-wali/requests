@@ -108,7 +108,7 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 	}
 
 	// Store the request update in the database.
-	err = db.AddRequestStatusUpdate(tx, requestID, requestStatusCode.ID, userID, "Request submitted.")
+	_, err = db.AddRequestStatusUpdate(tx, requestID, requestStatusCode.ID, userID, "Request submitted.")
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -164,7 +164,7 @@ func (a *API) GetRequestsHandler(ctx echo.Context) error {
 	defaultIncludeCompleted := false
 	includeCompleted, err := query.ValidateBooleanQueryParam(ctx, "include-completed", &defaultIncludeCompleted)
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, &ErrorResponse{
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 	}
@@ -215,7 +215,7 @@ func (a *API) GetRequestDetailsHandler(ctx echo.Context) error {
 	}
 	if requestDetails == nil {
 		tx.Rollback()
-		return ctx.JSON(http.StatusNotFound, &ErrorResponse{
+		return ctx.JSON(http.StatusNotFound, ErrorResponse{
 			Message: fmt.Sprintf("request %s not found", id),
 		})
 	}
@@ -229,4 +229,121 @@ func (a *API) GetRequestDetailsHandler(ctx echo.Context) error {
 
 	// Return the response.
 	return ctx.JSON(http.StatusOK, requestDetails)
+}
+
+// UpdateRequestHandler handles POST requests to the /requests/:id/update endpoint.
+func (a *API) UpdateRequestHandler(ctx echo.Context) error {
+	id := ctx.Param("id")
+	var err error
+
+	// Extract and validate the user query parameter.
+	user, err := query.ValidatedQueryParam(ctx, "user", "required")
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: "missing required query parameter: user",
+		})
+	}
+
+	// Extract and validate the request body.
+	requestUpdateSubmission := new(model.RequestUpdateSubmission)
+	if err = ctx.Bind(requestUpdateSubmission); err != nil {
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: fmt.Sprintf("invalid request body: %s", err.Error()),
+		})
+	}
+	if err = ctx.Validate(requestUpdateSubmission); err != nil {
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: fmt.Sprintf("invalid reuqest body: %s", err.Error()),
+		})
+	}
+
+	// Start a transaction
+	tx, err := a.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Look up the updating user ID.
+	userID, err := db.GetUserID(tx, user, a.UserDomain)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if userID == "" {
+		tx.Rollback()
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: fmt.Sprintf("user not found in DE database: %s", user),
+		})
+	}
+
+	// Verify that the request exists.
+	request, err := db.GetRequestDetails(tx, id)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if request == nil {
+		tx.Rollback()
+		return ctx.JSON(http.StatusNotFound, ErrorResponse{
+			Message: fmt.Sprintf("request %s not found", id),
+		})
+	}
+
+	// Look up the request status code.
+	requestStatusCode, err := db.GetRequestStatusCode(tx, requestUpdateSubmission.StatusCode)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if requestStatusCode == nil {
+		tx.Rollback()
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: fmt.Sprintf("invalid request status code: %s", requestUpdateSubmission.StatusCode),
+		})
+	}
+
+	// Save the request status update.
+	update, err := db.AddRequestStatusUpdate(tx, id, requestStatusCode.ID, userID, requestUpdateSubmission.Message)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Look up information about the user who submitted the request.
+	requestingUserInfo, err := a.IPlantGroupsClient.GetUserInfo(request.RequestingUser)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Format a human readable copy of the request submission details.
+	humanReadableRequestDetails, err := formatRequestDetails(request.Details.(map[string]interface{}))
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Add required information to a copy of the request details.
+	requestDetails := copyRequestDetails(request.Details.(map[string]interface{}))
+	requestDetails["request_details"] = humanReadableRequestDetails
+	requestDetails["update_message"] = update.Message
+
+	// Send the email.
+	email := requestingUserInfo.Email
+	template := requestStatusCode.EmailTemplate
+	err = a.IPlantEmailClient.SendRequestUpdatedEmail(*email, template, requestDetails)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Commit the transaction.
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Return the response.
+	return ctx.JSON(http.StatusOK, update)
 }

@@ -129,6 +129,7 @@ func main() {
 	e.GET("/requests", a.GetRequestsHandler)
 	e.POST("/requests", a.AddRequestHandler)
 	e.GET("/requests/:id", a.GetRequestDetailsHandler)
+	e.POST("/requests/:id/status", a.UpdateRequestHandler)
 
 	// Start the service.
 	e.Logger.Info("starting the service")

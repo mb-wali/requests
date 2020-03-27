@@ -67,3 +67,12 @@ type RequestDetails struct {
 	// The status updates for this request.
 	Updates []*RequestUpdate `json:"updates"`
 }
+
+// RequestUpdateSubmission represents information that should be submitted with a request update.
+type RequestUpdateSubmission struct {
+	// The request status code
+	StatusCode string `json:"status" validate:"required"`
+
+	// The message to associate with the request update.
+	Message string `json:"message"`
+}

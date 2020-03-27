@@ -28,18 +28,16 @@ func NewClient(baseURL string) *Client {
 	return &Client{baseURL: baseURL}
 }
 
-// SendRequestSubmittedEmail sends an email corresponding to a request.
-func (c *Client) SendRequestSubmittedEmail(emailAddress, templateName string, requestDetails interface{}) error {
-	errorMessage := "unable to send reqest notification email"
+// SendEmail sends an arbitrary email.
+func (c *Client) sendEmail(requestBody *EmailRequestBody) error {
+	errorMessage := "unable to send email"
 	var err error
 
-	// Build the request body.
-	body, err := json.Marshal(&EmailRequestBody{
-		To:       emailAddress,
-		Template: templateName,
-		Subject:  "New Administrative Request",
-		Values:   requestDetails,
-	})
+	// Serialize the request body.
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		return errors.Wrap(err, errorMessage)
+	}
 
 	// Submit the request.
 	resp, err := http.Post(c.baseURL, "application/json", bytes.NewReader(body))
@@ -58,4 +56,24 @@ func (c *Client) SendRequestSubmittedEmail(emailAddress, templateName string, re
 	}
 
 	return nil
+}
+
+// SendRequestSubmittedEmail sends an email corresponding to a request.
+func (c *Client) SendRequestSubmittedEmail(emailAddress, templateName string, requestDetails interface{}) error {
+	return c.sendEmail(&EmailRequestBody{
+		To:       emailAddress,
+		Template: templateName,
+		Subject:  "New Administrative Request",
+		Values:   requestDetails,
+	})
+}
+
+// SendRequestUpdatedEmail sends an email corresponding to a request status update.
+func (c *Client) SendRequestUpdatedEmail(emailAddress, templateName string, requestDetails interface{}) error {
+	return c.sendEmail(&EmailRequestBody{
+		To:       emailAddress,
+		Template: templateName,
+		Subject:  "Administrative Request Updated",
+		Values:   requestDetails,
+	})
 }

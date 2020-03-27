@@ -117,35 +117,6 @@ func GetRequestListing(tx *sql.Tx, options *RequestListingOptions) ([]*model.Req
 	return listing, nil
 }
 
-// GetRequestStatusUpdates looks up the status updates for a request.
-func GetRequestStatusUpdates(tx *sql.Tx, requestID string) ([]*model.RequestUpdate, error) {
-	query := `SELECT ru.id, rsc.name, regexp_replace(u.username, '@.*', ''), ru.created_date, ru.message
-			  FROM request_updates ru
-			  JOIN request_status_codes rsc ON ru.request_status_code_id = rsc.id
-			  JOIN users u ON ru.updating_user_id = u.id
-			  WHERE ru.request_id = $1
-			  ORDER BY ru.created_date`
-
-	// Query the database.
-	rows, err := tx.Query(query, requestID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	// Build the array of status updates.
-	updates := make([]*model.RequestUpdate, 0)
-	for rows.Next() {
-		var update model.RequestUpdate
-		err := rows.Scan(&update.ID, &update.StatusCode, &update.UpdatingUser, &update.CreatedDate, &update.Message)
-		if err != nil {
-			return nil, err
-		}
-		updates = append(updates, &update)
-	}
-	return updates, nil
-}
-
 // GetRequestDetails looks up the details of a request.
 func GetRequestDetails(tx *sql.Tx, id string) (*model.RequestDetails, error) {
 	query := `SELECT r.id, regexp_replace(u.username, '@.*', ''), rt.name, r.details
