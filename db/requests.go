@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 
 	"github.com/cyverse-de/requests/model"
 
@@ -25,20 +24,11 @@ func AddRequest(tx *sql.Tx, userID, requestTypeID string, details interface{}) (
 	}
 
 	// Insert the new request.
-	rows, err := tx.Query(query, requestTypeID, userID, encodedDetails)
-	if err != nil {
-		return "", err
-	}
-	defer rows.Close()
-
-	// There should be at least one row in the result set.
-	if !rows.Next() {
-		return "", fmt.Errorf("no rows returned after an insert returning a value")
-	}
+	row := tx.QueryRow(query, requestTypeID, userID, encodedDetails)
 
 	// Extract the request ID.
 	var requestID string
-	err = rows.Scan(&requestID)
+	err = row.Scan(&requestID)
 	if err != nil {
 		return "", err
 	}
@@ -126,31 +116,22 @@ func GetRequestDetails(tx *sql.Tx, id string) (*model.RequestDetails, error) {
 			  WHERE r.id = $1`
 
 	// Query the database.
-	rows, err := tx.Query(query, id)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	// Just return nil if there aren't any rows.
-	if !rows.Next() {
-		return nil, nil
-	}
+	row := tx.QueryRow(query, id)
 
 	// Extract the request details.
 	var rd model.RequestDetails
 	var rdDetails string
-	err = rows.Scan(&rd.ID, &rd.RequestingUser, &rd.RequestType, &rdDetails)
-	if err != nil {
+	err := row.Scan(&rd.ID, &rd.RequestingUser, &rd.RequestType, &rdDetails)
+	switch {
+	case err == sql.ErrNoRows:
+		return nil, nil
+	case err != nil:
 		return nil, err
 	}
 	err = json.Unmarshal([]byte(rdDetails), &rd.Details)
 	if err != nil {
 		return nil, err
 	}
-
-	// The rows have to be closed before we can make additional queries.
-	rows.Close()
 
 	// Add status information to the request details.
 	rd.Updates, err = GetRequestStatusUpdates(tx, id)

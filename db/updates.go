@@ -45,24 +45,19 @@ func GetRequestStatusUpdate(tx *sql.Tx, updateID string) (*model.RequestUpdate, 
 		WHERE ru.id = $1`
 
 	// Query the database.
-	rows, err := tx.Query(query, updateID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	// Quit now if no update was found.
-	if !rows.Next() {
-		return nil, nil
-	}
+	row := tx.QueryRow(query, updateID)
 
 	// Extract the status update information.
 	var update model.RequestUpdate
-	err = rows.Scan(&update.ID, &update.StatusCode, &update.UpdatingUser, &update.CreatedDate, &update.Message)
-	if err != nil {
+	err := row.Scan(&update.ID, &update.StatusCode, &update.UpdatingUser, &update.CreatedDate, &update.Message)
+	switch {
+	case err == sql.ErrNoRows:
+		return nil, nil
+	case err != nil:
 		return nil, err
+	default:
+		return &update, nil
 	}
-	return &update, nil
 }
 
 // AddRequestStatusUpdate adds a status update to a request.
@@ -74,26 +69,14 @@ func AddRequestStatusUpdate(
 			  RETURNING id`
 
 	//  Insert the request update.
-	rows, err := tx.Query(query, requestID, requestStatusCodeID, updatingUserID, message)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	// There should be at least one row in the result set.
-	if !rows.Next() {
-		return nil, fmt.Errorf("no rows returned after an insert returning a value")
-	}
+	row := tx.QueryRow(query, requestID, requestStatusCodeID, updatingUserID, message)
 
 	// Extract the request update id.
 	var updateID string
-	err = rows.Scan(&updateID)
+	err := row.Scan(&updateID)
 	if err != nil {
 		return nil, err
 	}
-
-	// The rows have to be closed before we can make additional queries.
-	rows.Close()
 
 	// Look up the update information.
 	updateDetails, err := GetRequestStatusUpdate(tx, updateID)
