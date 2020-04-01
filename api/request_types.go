@@ -27,18 +27,17 @@ func (a *API) GetRequestTypesHandler(ctx echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	// Obtain the list of request types.
 	requestTypes, err := db.ListRequestTypes(tx)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
 	// Commit the transaction.
 	err = tx.Commit()
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
@@ -65,17 +64,16 @@ func (a *API) RegisterRequestTypeHandler(ctx echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	// If a request type with the same name already exists, return it.
 	requestType, err := db.GetRequestType(tx, name)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	if requestType != nil {
 		err = tx.Commit()
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 		return ctx.JSON(http.StatusOK, requestType)
@@ -84,14 +82,12 @@ func (a *API) RegisterRequestTypeHandler(ctx echo.Context) error {
 	// The request type doesn't exist yet. Add it.
 	requestType, err = db.AddRequestType(tx, name)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
 	// Commit the transaction.
 	err = tx.Commit()
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
@@ -108,18 +104,17 @@ func (a *API) GetRequestTypeHandler(ctx echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	// Get the request type.
 	requestType, err := db.GetRequestType(tx, name)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
 	// Commit the transaction.
 	err = tx.Commit()
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 

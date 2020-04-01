@@ -62,15 +62,14 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	// Look up the user ID.
 	userID, err := db.GetUserID(tx, user, a.UserDomain)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	if userID == "" {
-		tx.Rollback()
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: fmt.Sprintf("user not found in DE database: %s", user),
 		})
@@ -79,11 +78,9 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 	// Look up the request type.
 	requestType, err := db.GetRequestType(tx, requestSubmission.RequestType)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	if requestType == nil {
-		tx.Rollback()
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: fmt.Sprintf("request type not found: %s", requestSubmission.RequestType),
 		})
@@ -92,32 +89,27 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 	// Store the request in the database.
 	requestID, err := db.AddRequest(tx, userID, requestType.ID, requestSubmission.Details)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
 	// Look up the request status code.
 	requestStatusCode, err := db.GetRequestStatusCode(tx, "submitted")
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	if requestStatusCode == nil {
-		tx.Rollback()
 		return fmt.Errorf("request status code not found: submitted")
 	}
 
 	// Store the request update in the database.
 	_, err = db.AddRequestStatusUpdate(tx, requestID, requestStatusCode.ID, userID, "Request submitted.")
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
 	// Format a human readable copy of the request submission details.
 	humanReadableRequestDetails, err := formatRequestDetails(requestSubmission.Details.(map[string]interface{}))
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
@@ -130,14 +122,12 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 	// Send the email.
 	err = a.IPlantEmailClient.SendRequestSubmittedEmail(a.AdminEmail, requestStatusCode.EmailTemplate, requestDetails)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
 	// Commit the transaction.
 	err = tx.Commit()
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
@@ -159,6 +149,7 @@ func (a *API) GetRequestsHandler(ctx echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	// Extract and validate the user query parameter.
 	defaultIncludeCompleted := false
@@ -179,14 +170,12 @@ func (a *API) GetRequestsHandler(ctx echo.Context) error {
 	// Get the list of matching requests.
 	requests, err := db.GetRequestListing(tx, options)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
 	// Commit the transaction.
 	err = tx.Commit()
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
@@ -206,15 +195,14 @@ func (a *API) GetRequestDetailsHandler(ctx echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	// Look up the request details.
 	requestDetails, err := db.GetRequestDetails(tx, id)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	if requestDetails == nil {
-		tx.Rollback()
 		return ctx.JSON(http.StatusNotFound, ErrorResponse{
 			Message: fmt.Sprintf("request %s not found", id),
 		})
@@ -223,7 +211,6 @@ func (a *API) GetRequestDetailsHandler(ctx echo.Context) error {
 	// Commit the transaction.
 	err = tx.Commit()
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
@@ -262,15 +249,14 @@ func (a *API) UpdateRequestHandler(ctx echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	// Look up the updating user ID.
 	userID, err := db.GetUserID(tx, user, a.UserDomain)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	if userID == "" {
-		tx.Rollback()
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: fmt.Sprintf("user not found in DE database: %s", user),
 		})
@@ -279,11 +265,9 @@ func (a *API) UpdateRequestHandler(ctx echo.Context) error {
 	// Verify that the request exists.
 	request, err := db.GetRequestDetails(tx, id)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	if request == nil {
-		tx.Rollback()
 		return ctx.JSON(http.StatusNotFound, ErrorResponse{
 			Message: fmt.Sprintf("request %s not found", id),
 		})
@@ -292,11 +276,9 @@ func (a *API) UpdateRequestHandler(ctx echo.Context) error {
 	// Look up the request status code.
 	requestStatusCode, err := db.GetRequestStatusCode(tx, requestUpdateSubmission.StatusCode)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	if requestStatusCode == nil {
-		tx.Rollback()
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: fmt.Sprintf("invalid request status code: %s", requestUpdateSubmission.StatusCode),
 		})
@@ -305,21 +287,18 @@ func (a *API) UpdateRequestHandler(ctx echo.Context) error {
 	// Save the request status update.
 	update, err := db.AddRequestStatusUpdate(tx, id, requestStatusCode.ID, userID, requestUpdateSubmission.Message)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
 	// Look up information about the user who submitted the request.
 	requestingUserInfo, err := a.IPlantGroupsClient.GetUserInfo(request.RequestingUser)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
 	// Format a human readable copy of the request submission details.
 	humanReadableRequestDetails, err := formatRequestDetails(request.Details.(map[string]interface{}))
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
@@ -333,14 +312,12 @@ func (a *API) UpdateRequestHandler(ctx echo.Context) error {
 	template := requestStatusCode.EmailTemplate
 	err = a.IPlantEmailClient.SendRequestUpdatedEmail(*email, template, requestDetails)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
 	// Commit the transaction.
 	err = tx.Commit()
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 

@@ -16,18 +16,17 @@ func (a *API) GetRequestStatusCodesHandler(ctx echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	// Obtain the list of request status codes.
 	requestStatusCodes, err := db.ListRequestStatusCodes(tx)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
 	// Commit the transaction.
 	err = tx.Commit()
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
