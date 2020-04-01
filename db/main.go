@@ -23,10 +23,5 @@ func InitDatabase(driverName, databaseURI string) (*sql.DB, error) {
 		return nil, errors.Wrap(err, wrapMsg)
 	}
 
-	// Verify that we can ping the database.
-	if err := db.Ping(); err != nil {
-		return nil, errors.Wrap(err, wrapMsg)
-	}
-
 	return db, nil
 }
