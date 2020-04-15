@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/cyverse-de/requests/clients/notificationagent"
+
 	"github.com/cyverse-de/requests/clients/iplantgroups"
 
 	"github.com/cyverse-de/requests/clients/iplantemail"
@@ -108,16 +110,20 @@ func main() {
 		cfg.GetString("iplant_groups.user"),
 	)
 
+	// Create the notification-agent client.
+	notificationAgentClient := notificationagent.NewClient(cfg.GetString("notification_agent.base"))
+
 	// Define the API.
 	a := api.API{
-		Echo:               e,
-		Title:              serviceInfo.Title,
-		Version:            serviceInfo.Version,
-		DB:                 db,
-		UserDomain:         cfg.GetString("users.domain"),
-		AdminEmail:         cfg.GetString("email.request"),
-		IPlantEmailClient:  iplantEmailClient,
-		IPlantGroupsClient: iplantGroupsClient,
+		Echo:                    e,
+		Title:                   serviceInfo.Title,
+		Version:                 serviceInfo.Version,
+		DB:                      db,
+		UserDomain:              cfg.GetString("users.domain"),
+		AdminEmail:              cfg.GetString("email.request"),
+		IPlantEmailClient:       iplantEmailClient,
+		IPlantGroupsClient:      iplantGroupsClient,
+		NotificationAgentClient: notificationAgentClient,
 	}
 
 	// Define the API endpoints.
