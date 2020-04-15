@@ -313,12 +313,15 @@ func (a *API) UpdateRequestHandler(ctx echo.Context) error {
 	requestDetails["user"] = requestingUserInfo.ID
 
 	// Send the email.
+	emailText := "Your administrative request status is now: " +
+		requestStatusCode.DisplayName +
+		"."
 	err = a.NotificationAgentClient.SendNotification(
 		&notificationagent.NotificationRequest{
 			Type:          "request",
 			User:          *requestingUserInfo.ID,
-			Subject:       "Administrative Request Updated",
-			Message:       "Your administrative request has been updated.",
+			Subject:       "Administrative Request " + requestStatusCode.DisplayName,
+			Message:       emailText,
 			Email:         true,
 			EmailTemplate: requestStatusCode.EmailTemplate,
 			Payload:       requestDetails,
