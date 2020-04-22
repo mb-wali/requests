@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
-	"strings"
 
+	"github.com/cyverse-de/requests/clients/util"
 	"github.com/pkg/errors"
 )
 
@@ -41,28 +40,19 @@ func NewClient(baseURL, deGrouperUser string) *Client {
 func (c *Client) buildURL(pathComponents ...string) (string, error) {
 	var err error
 
-	// Parse the base URL.
-	parsedBaseURL, err := url.Parse(c.baseURL)
+	// Build the URL with the full path.
+	fullURL, err := util.BuildURL(c.baseURL, pathComponents)
 	if err != nil {
 		return "", err
 	}
 
-	// Build the relative path from the path components.
-	relativePath := ""
-	for _, pathComponent := range pathComponents {
-		relativePath = relativePath + "/" + url.PathEscape(pathComponent)
-	}
-
-	// Append the relative path to the existing URL path.
-	parsedBaseURL.Path = strings.TrimRight(parsedBaseURL.Path, "/") + relativePath
-
 	// Add the user query argument.
-	query := parsedBaseURL.Query()
+	query := fullURL.Query()
 	query.Set("user", c.deGrouperUser)
-	parsedBaseURL.RawQuery = query.Encode()
+	fullURL.RawQuery = query.Encode()
 
 	// Return the updated URL.
-	return parsedBaseURL.String(), nil
+	return fullURL.String(), nil
 }
 
 // GetUserInfo looks up information for a single user by calling iplant-groups.

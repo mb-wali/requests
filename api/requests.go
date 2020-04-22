@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cyverse-de/requests/clients/notificationagent"
+
 	"github.com/cyverse-de/requests/db"
 	"github.com/cyverse-de/requests/model"
 	"github.com/cyverse-de/requests/query"
@@ -306,11 +308,25 @@ func (a *API) UpdateRequestHandler(ctx echo.Context) error {
 	requestDetails := copyRequestDetails(request.Details.(map[string]interface{}))
 	requestDetails["request_details"] = humanReadableRequestDetails
 	requestDetails["update_message"] = update.Message
+	requestDetails["email_address"] = requestingUserInfo.Email
+	requestDetails["action"] = "request_status_change"
+	requestDetails["user"] = requestingUserInfo.ID
 
 	// Send the email.
-	email := requestingUserInfo.Email
-	template := requestStatusCode.EmailTemplate
-	err = a.IPlantEmailClient.SendRequestUpdatedEmail(*email, template, requestDetails)
+	emailText := "Your administrative request status is now: " +
+		requestStatusCode.DisplayName +
+		"."
+	err = a.NotificationAgentClient.SendNotification(
+		&notificationagent.NotificationRequest{
+			Type:          "request",
+			User:          *requestingUserInfo.ID,
+			Subject:       "Administrative Request " + requestStatusCode.DisplayName,
+			Message:       emailText,
+			Email:         true,
+			EmailTemplate: requestStatusCode.EmailTemplate,
+			Payload:       requestDetails,
+		},
+	)
 	if err != nil {
 		return err
 	}
