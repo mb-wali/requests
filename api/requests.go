@@ -104,7 +104,7 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 	}
 
 	// Store the request update in the database.
-	_, err = db.AddRequestStatusUpdate(tx, requestID, requestStatusCode.ID, userID, "Request submitted.")
+	update, err := db.AddRequestStatusUpdate(tx, requestID, requestStatusCode.ID, userID, "Request submitted.")
 	if err != nil {
 		return err
 	}
@@ -138,6 +138,9 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 		ID:             requestID,
 		RequestingUser: user,
 		RequestType:    requestSubmission.RequestType,
+		CreatedDate:    update.CreatedDate,
+		Status:         requestStatusCode.DisplayName,
+		UpdatedDate:    update.CreatedDate,
 		Details:        requestSubmission.Details,
 	})
 }

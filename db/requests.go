@@ -45,31 +45,52 @@ type RequestListingOptions struct {
 
 // GetRequestListing obtains a list of requests from the database.
 func GetRequestListing(tx *sql.Tx, options *RequestListingOptions) ([]*model.RequestSummary, error) {
-	base := psql.Select("r.id, regexp_replace(u.username, '@.*', ''), rt.name, r.details").
+
+	// Prepare the primary listing query as a subquery.
+	subquery := psql.Select().Distinct().
+		Column("r.id").
+		Column("regexp_replace(u.username, '@.*', '') AS username").
+		Column("rt.name AS request_type").
+		Column("first(ru.created_date) OVER w AS created_date").
+		Column("last(rsc.name) OVER w AS status").
+		Column("last(rsc.display_name) OVER w AS display_status").
+		Column("last(ru.created_date) OVER w AS updated_date").
+		Column("CAST(r.details AS text) AS details").
 		From("requests r").
 		Join("users u ON r.requesting_user_id = u.id").
-		Join("request_types rt ON r.request_type_id = rt.id")
+		Join("request_types rt ON r.request_type_id = rt.id").
+		Join("request_updates ru ON r.id = ru.request_id").
+		Join("request_status_codes rsc ON ru.request_status_code_id = rsc.id").
+		Suffix("WINDOW w AS (" +
+			"PARTITION BY ru.request_id " +
+			"ORDER BY ru.created_date " +
+			"RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)")
+
+	// Prepare the base query.
+	base := psql.Select().
+		Column("id").
+		Column("username").
+		Column("request_type").
+		Column("created_date").
+		Column("display_status").
+		Column("updated_date").
+		Column("details").
+		FromSelect(subquery, "subquery").
+		OrderBy("created_date")
 
 	// Add the filter to omit completed requests if we're not supposed to include them in the listing.
 	if !options.IncludeCompletedRequests {
-		nestedBuilder := psql.Select("*").
-			Prefix("NOT EXISTS (").
-			From("request_updates ru").
-			Join("request_status_codes rsc ON ru.request_status_code_id = rsc.id").
-			Where("ru.request_id = r.id").
-			Where(sq.Eq{"rsc.name": []string{"complete", "rejected"}}).
-			Suffix(")")
-		base = base.Where(nestedBuilder)
+		base = base.Where(sq.NotEq{"status": []string{"complete", "rejected"}})
 	}
 
 	// Add the filter to limit the listing to requests of a given type if applicable.
 	if options.RequestType != "" {
-		base = base.Where(sq.Eq{"rt.name": options.RequestType})
+		base = base.Where(sq.Eq{"request_type": options.RequestType})
 	}
 
 	// Add the filter to limit the listing to requests submitted by a user if applicable.
 	if options.RequestingUser != "" {
-		base = base.Where(sq.Eq{"regexp_replace(u.username, '@.*', '')": options.RequestingUser})
+		base = base.Where(sq.Eq{"username": options.RequestingUser})
 	}
 
 	// Build the query.
@@ -90,7 +111,15 @@ func GetRequestListing(tx *sql.Tx, options *RequestListingOptions) ([]*model.Req
 	for rows.Next() {
 		var request model.RequestSummary
 		var requestDetails string
-		err = rows.Scan(&request.ID, &request.RequestingUser, &request.RequestType, &requestDetails)
+		err = rows.Scan(
+			&request.ID,
+			&request.RequestingUser,
+			&request.RequestType,
+			&request.CreatedDate,
+			&request.Status,
+			&request.UpdatedDate,
+			&requestDetails,
+		)
 		if err != nil {
 			return nil, err
 		}

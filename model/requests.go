@@ -22,6 +22,15 @@ type RequestSummary struct {
 	// The request type
 	RequestType string `json:"request_type"`
 
+	// The time the request was submitted.
+	CreatedDate time.Time `json:"created_date"`
+
+	// The request status.
+	Status string `json:"status"`
+
+	// The the the request was most recently updated.
+	UpdatedDate time.Time `json:"updated_date"`
+
 	// Arbitrary JSON object describing the request details
 	Details interface{} `json:"details"`
 }
