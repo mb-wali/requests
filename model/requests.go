@@ -28,7 +28,7 @@ type RequestSummary struct {
 	// The request status.
 	Status string `json:"status"`
 
-	// The the the request was most recently updated.
+	// The time the request was most recently updated.
 	UpdatedDate time.Time `json:"updated_date"`
 
 	// Arbitrary JSON object describing the request details
