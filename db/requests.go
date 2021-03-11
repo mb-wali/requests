@@ -45,17 +45,14 @@ type RequestListingOptions struct {
 
 // GetRequestListing obtains a list of requests from the database.
 func GetRequestListing(tx *sql.Tx, options *RequestListingOptions) ([]*model.RequestSummary, error) {
-	base := sq.StatementBuilder.
-		PlaceholderFormat(sq.Dollar).
-		Select("r.id, regexp_replace(u.username, '@.*', ''), rt.name, r.details").
+	base := psql.Select("r.id, regexp_replace(u.username, '@.*', ''), rt.name, r.details").
 		From("requests r").
 		Join("users u ON r.requesting_user_id = u.id").
 		Join("request_types rt ON r.request_type_id = rt.id")
 
 	// Add the filter to omit completed requests if we're not supposed to include them in the listing.
 	if !options.IncludeCompletedRequests {
-		nestedBuilder := sq.StatementBuilder.
-			Select("*").
+		nestedBuilder := psql.Select("*").
 			Prefix("NOT EXISTS (").
 			From("request_updates ru").
 			Join("request_status_codes rsc ON ru.request_status_code_id = rsc.id").
