@@ -26,10 +26,10 @@ type API struct {
 // RootResponse describes the response of the root endpoint.
 type RootResponse struct {
 
-	// The name of the service.
+	// The name of the service
 	Service string `json:"service"`
 
-	// The service title.
+	// The service title
 	Title string `json:"title"`
 
 	// The service version

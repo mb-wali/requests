@@ -22,13 +22,22 @@ type RequestSummary struct {
 	// The request type
 	RequestType string `json:"request_type"`
 
+	// The time the request was submitted
+	CreatedDate time.Time `json:"created_date"`
+
+	// The request status
+	Status string `json:"status"`
+
+	// The time the request was most recently updated
+	UpdatedDate time.Time `json:"updated_date"`
+
 	// Arbitrary JSON object describing the request details
 	Details interface{} `json:"details"`
 }
 
 // RequestListing represents a list of requests.
 type RequestListing struct {
-	// The list of requests.
+	// The list of requests
 	Requests []*RequestSummary `json:"requests"`
 }
 
@@ -64,7 +73,7 @@ type RequestDetails struct {
 	// Arbitrary JSON object describing the request details
 	Details interface{} `json:"details"`
 
-	// The status updates for this request.
+	// The status updates for this request
 	Updates []*RequestUpdate `json:"updates"`
 }
 
@@ -73,6 +82,6 @@ type RequestUpdateSubmission struct {
 	// The request status code
 	StatusCode string `json:"status" validate:"required"`
 
-	// The message to associate with the request update.
+	// The message to associate with the request update
 	Message string `json:"message"`
 }

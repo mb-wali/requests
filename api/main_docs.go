@@ -26,14 +26,14 @@ import "github.com/cyverse-de/requests/model"
 // responses:
 //   200: rootResponse
 
-// General information about the API.
+// General information about the API
 // swagger:response rootResponse
 type rootResponseWrapper struct {
 	// in:body
 	Body RootResponse
 }
 
-// Basic error response.
+// Basic error response
 // swagger:response errorResponse
 type errorResponseWrapper struct {
 	// in:body
@@ -49,7 +49,7 @@ type errorResponseWrapper struct {
 // responses:
 //    200: requestTypeListing
 
-// Request type listing response.
+// Request type listing response
 // swagger:response requestTypeListing
 type requestTypeListingWrapper struct {
 	// in:body
@@ -78,14 +78,14 @@ type requestTypeListingWrapper struct {
 //   200: requestType
 //   404: errorResponse
 
-// Request type response.
+// Request type response
 // swagger:response requestType
 type requestTypeWrapper struct {
 	// in:body
 	Body model.RequestType
 }
 
-// Parameters for registering a request type.
+// Parameters for registering a request type
 // swagger:parameters registerRequestType getRequestType
 type registerRequestTypeParameters struct {
 	// the name of the request type being registered
@@ -103,7 +103,7 @@ type registerRequestTypeParameters struct {
 // responses:
 //    200: requestStatusCodeListing
 
-// Request status code listing response.
+// Request status code listing response
 // swagger:response requestStatusCodeListing
 type requestStatusCodeListingWrapper struct {
 	// in:body
@@ -119,7 +119,7 @@ type requestStatusCodeListingWrapper struct {
 // Responses:
 //   200: requestSummary
 
-// Request summary information.
+// Request summary information
 // swagger:response requestSummary
 type requestSummaryWrapper struct {
 	// in:body
@@ -150,7 +150,7 @@ type requestSubmissionParameters struct {
 // Responses:
 //   200: requestListing
 
-// Request listing.
+// Request listing
 // swagger:response requestListing
 type requestListingWrapper struct {
 	// in:body
@@ -185,14 +185,14 @@ type requestListingParameters struct {
 // Responses:
 //   200: requestDetails
 
-// Request detail information.
+// Request detail information
 // swagger:response requestDetails
 type requestDetailsWrapper struct {
 	// in:body
 	Body model.RequestDetails
 }
 
-// Parameters for the request details endpoint.
+// Parameters for the request details endpoint
 // swagger:parameters getRequestInformation
 type getRequestInformationParameters struct {
 	// The request ID
@@ -205,12 +205,12 @@ type getRequestInformationParameters struct {
 //
 // Uppdate Request Status
 //
-// This endpoint allows administrators to update the status of a request.
+// This endpoint allows administrators to update the status of a request
 //
 // Responses:
 //   200: requestUpdate
 
-// Request update information.
+// Request update information
 // swagger:response requestUpdate
 type requestUpdateWrapper struct {
 	// in:body

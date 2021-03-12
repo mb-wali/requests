@@ -3,9 +3,13 @@ package db
 import (
 	"database/sql"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/cyverse-de/dbutil"
 	"github.com/pkg/errors"
 )
+
+// A convenient shorthand for a statement builder that works with Postgres.
+var psql = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 // InitDatabase establishes a database connection and verifies that the database can be reached.
 func InitDatabase(driverName, databaseURI string) (*sql.DB, error) {
