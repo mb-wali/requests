@@ -80,7 +80,7 @@ func GetRequestListing(tx *sql.Tx, options *RequestListingOptions) ([]*model.Req
 
 	// Add the filter to omit completed requests if we're not supposed to include them in the listing.
 	if !options.IncludeCompletedRequests {
-		base = base.Where(sq.NotEq{"status": []string{"complete", "rejected"}})
+		base = base.Where(sq.NotEq{"status": []string{"approved", "rejected"}})
 	}
 
 	// Add the filter to limit the listing to requests of a given type if applicable.
