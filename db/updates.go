@@ -9,7 +9,7 @@ import (
 
 // GetRequestStatusUpdates looks up the status updates for a request.
 func GetRequestStatusUpdates(tx *sql.Tx, requestID string) ([]*model.RequestUpdate, error) {
-	query := `SELECT ru.id, rsc.name, regexp_replace(u.username, '@.*', ''), ru.created_date, ru.message
+	query := `SELECT ru.id, rsc.display_name, regexp_replace(u.username, '@.*', ''), ru.created_date, ru.message
 			  FROM request_updates ru
 			  JOIN request_status_codes rsc ON ru.request_status_code_id = rsc.id
 			  JOIN users u ON ru.updating_user_id = u.id
@@ -38,7 +38,7 @@ func GetRequestStatusUpdates(tx *sql.Tx, requestID string) ([]*model.RequestUpda
 
 // GetRequestStatusUpdate returns information for the request with the given ID.
 func GetRequestStatusUpdate(tx *sql.Tx, updateID string) (*model.RequestUpdate, error) {
-	query := `SELECT ru.id, rsc.name, regexp_replace(u.username, '@.*', ''), ru.created_date, ru.message
+	query := `SELECT ru.id, rsc.display_name, regexp_replace(u.username, '@.*', ''), ru.created_date, ru.message
 		FROM request_updates ru
 		JOIN request_status_codes rsc ON ru.request_status_code_id = rsc.id
 		JOIN users u ON ru.updating_user_id = u.id
