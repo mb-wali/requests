@@ -60,7 +60,7 @@ func ValidateOptionalIntQueryParam(ctx echo.Context, name string) (*int32, error
 		return nil, nil
 	}
 
-	// Parase the parameter value and return the result.
+	// Parse the parameter value and return the result.
 	parsed, err := strconv.ParseInt(value, 10, 32)
 	if err != nil {
 		return nil, errors.Wrap(err, errMsg)
