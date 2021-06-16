@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 
 	"github.com/cyverse-de/requests/clients/iplantemail"
@@ -36,9 +37,26 @@ type RootResponse struct {
 	Version string `json:"Version"`
 }
 
-// ErrorResponse describes an error response for any endpoint.
+// ErrorResponse describes an error response for any endpoint. This type implements the error interface so that it can
+// be returned as an error from existing functions.
 type ErrorResponse struct {
-	Message string `json:"message"`
+	Message   string                  `json:"message"`
+	ErrorCode string                  `json:"error_code,omitempty"`
+	Details   *map[string]interface{} `json:"details,omitempty"`
+}
+
+// ErrorBytes returns a byte-array representation of an ErrorResponse.
+func (e ErrorResponse) ErrorBytes() []byte {
+	bytes, err := json.Marshal(e)
+	if err != nil {
+		return make([]byte, 0)
+	}
+	return bytes
+}
+
+// Error returns a string representation of an ErrorResponse.
+func (e ErrorResponse) Error() string {
+	return string(e.ErrorBytes())
 }
 
 // RootHandler handles GET requests to the / endpoint.

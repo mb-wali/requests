@@ -95,14 +95,14 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 			return err
 		}
 		if count >= *requestType.MaximumRequestsPerUser {
-
-			// We use a 402 rather than a 403 because a 403 might confuse callers and no other status code really fits.
-			return ctx.JSON(http.StatusPaymentRequired, ErrorResponse{
-				Message: fmt.Sprintf(
-					"the number of previously submitted requests (%d) meets or exceeds the maximum (%d)",
-					count,
-					*requestType.MaximumRequestsPerUser,
-				),
+			return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+				Message:   fmt.Sprintf("no more requests of type '%s' may be submitted", requestType.Name),
+				ErrorCode: "ERR_LIMIT_REACHED",
+				Details: &map[string]interface{}{
+					"requestType":       requestType.Name,
+					"maximumRequests":   *requestType.MaximumRequestsPerUser,
+					"submittedRequests": count,
+				},
 			})
 		}
 	}
