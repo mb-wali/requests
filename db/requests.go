@@ -11,6 +11,26 @@ import (
 	"github.com/pkg/errors"
 )
 
+// CountRequestsOfType counts the number of requests of the given type that have been submitted by the given user.
+func CountRequestsOfType(tx *sql.Tx, userID, requestTypeID string) (int32, error) {
+
+	// Prepare the query.
+	query, args, err := psql.Select("count(*)").
+		From("requests").
+		Where(sq.Eq{"requesting_user_id": userID}).
+		Where(sq.Eq{"request_type_id": requestTypeID}).
+		ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	// Query the database and extract the count.
+	var count int32
+	row := tx.QueryRow(query, args...)
+	err = row.Scan(&count)
+	return count, err
+}
+
 // AddRequest adds a new request to the database.
 func AddRequest(tx *sql.Tx, userID, requestTypeID string, details interface{}) (string, error) {
 	query := `INSERT INTO requests (request_type_id, requesting_user_id, details)

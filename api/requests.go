@@ -88,6 +88,25 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 		})
 	}
 
+	// Verify that the user is permitted to submit more requests of this type if there's a limit.
+	if requestType.MaximumRequestsPerUser != nil {
+		count, err := db.CountRequestsOfType(tx, userID, requestType.ID)
+		if err != nil {
+			return err
+		}
+		if count >= *requestType.MaximumRequestsPerUser {
+
+			// We use a 402 rather than a 403 because a 403 might confuse callers and no other status code really fits.
+			return ctx.JSON(http.StatusPaymentRequired, ErrorResponse{
+				Message: fmt.Sprintf(
+					"the number of previously submitted requests (%d) meets or exceeds the maximum (%d)",
+					count,
+					*requestType.MaximumRequestsPerUser,
+				),
+			})
+		}
+	}
+
 	// Store the request in the database.
 	requestID, err := db.AddRequest(tx, userID, requestType.ID, requestSubmission.Details)
 	if err != nil {
