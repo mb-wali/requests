@@ -92,6 +92,11 @@ type registerRequestTypeParameters struct {
 	//
 	// in:path
 	Name string
+
+	// the maximum number of requests of the given type that a user may submit
+	//
+	// in:query
+	MaximumRequestsPerUser *int32 `json:"maximum-requests-per-user"`
 }
 
 // swagger:route GET /request-status-codes request-status-codes getRequestStatusCodes

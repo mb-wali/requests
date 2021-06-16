@@ -156,7 +156,7 @@ func (a *API) GetRequestsHandler(ctx echo.Context) error {
 	}
 	defer tx.Rollback()
 
-	// Extract and validate the user query parameter.
+	// Extract and validate the include-completed query parameter.
 	defaultIncludeCompleted := false
 	includeCompleted, err := query.ValidateBooleanQueryParam(ctx, "include-completed", &defaultIncludeCompleted)
 	if err != nil {

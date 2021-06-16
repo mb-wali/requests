@@ -7,6 +7,7 @@ import (
 
 	"github.com/cyverse-de/requests/db"
 	"github.com/cyverse-de/requests/model"
+	"github.com/cyverse-de/requests/query"
 	"github.com/labstack/echo"
 )
 
@@ -59,6 +60,19 @@ func (a *API) RegisterRequestTypeHandler(ctx echo.Context) error {
 		})
 	}
 
+	// Get the maximum number of requests per user for this request type and validate it.
+	maximumRequestsPerUser, err := query.ValidateOptionalIntQueryParam(ctx, "maximum-requests-per-user")
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+	if maximumRequestsPerUser != nil && *maximumRequestsPerUser <= 0 {
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: "maximum-requests-per-user must be a positive integer if specified",
+		})
+	}
+
 	// Start a transaction.
 	tx, err := a.DB.Begin()
 	if err != nil {
@@ -80,7 +94,7 @@ func (a *API) RegisterRequestTypeHandler(ctx echo.Context) error {
 	}
 
 	// The request type doesn't exist yet. Add it.
-	requestType, err = db.AddRequestType(tx, name)
+	requestType, err = db.AddRequestType(tx, name, maximumRequestsPerUser)
 	if err != nil {
 		return err
 	}
