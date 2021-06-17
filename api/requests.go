@@ -88,6 +88,25 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 		})
 	}
 
+	// Verify that the user is permitted to submit more requests of this type if there's a limit.
+	if requestType.MaximumRequestsPerUser != nil {
+		count, err := db.CountRequestsOfType(tx, userID, requestType.ID)
+		if err != nil {
+			return err
+		}
+		if count >= *requestType.MaximumRequestsPerUser {
+			return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+				Message:   fmt.Sprintf("no more requests of type '%s' may be submitted", requestType.Name),
+				ErrorCode: "ERR_LIMIT_REACHED",
+				Details: &map[string]interface{}{
+					"requestType":       requestType.Name,
+					"maximumRequests":   *requestType.MaximumRequestsPerUser,
+					"submittedRequests": count,
+				},
+			})
+		}
+	}
+
 	// Store the request in the database.
 	requestID, err := db.AddRequest(tx, userID, requestType.ID, requestSubmission.Details)
 	if err != nil {
@@ -156,7 +175,7 @@ func (a *API) GetRequestsHandler(ctx echo.Context) error {
 	}
 	defer tx.Rollback()
 
-	// Extract and validate the user query parameter.
+	// Extract and validate the include-completed query parameter.
 	defaultIncludeCompleted := false
 	includeCompleted, err := query.ValidateBooleanQueryParam(ctx, "include-completed", &defaultIncludeCompleted)
 	if err != nil {

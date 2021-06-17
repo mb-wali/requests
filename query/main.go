@@ -48,3 +48,23 @@ func ValidateBooleanQueryParam(ctx echo.Context, name string, defaultValue *bool
 	}
 	return result, nil
 }
+
+// ValidateOptionalIntQueryParam extracts an optional integer query parameter and validates it. This function returns
+// nil if the parameter is not specified.
+func ValidateOptionalIntQueryParam(ctx echo.Context, name string) (*int32, error) {
+	errMsg := fmt.Sprintf("invalid query parameter: %s", name)
+	value := ctx.QueryParam(name)
+
+	// If no value was provided, simply return nil.
+	if value == "" {
+		return nil, nil
+	}
+
+	// Parse the parameter value and return the result.
+	parsed, err := strconv.ParseInt(value, 10, 32)
+	if err != nil {
+		return nil, errors.Wrap(err, errMsg)
+	}
+	result := int32(parsed)
+	return &result, nil
+}

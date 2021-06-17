@@ -7,6 +7,9 @@ type RequestType struct {
 
 	// the request type name
 	Name string `json:"name"`
+
+	// the maximum number of requests of this type that a user may submit
+	MaximumRequestsPerUser *int32 `json:"maximum_requests_per_user,omitempty"`
 }
 
 // RequestTypeListing describes a listing of request types.

@@ -48,6 +48,7 @@ type errorResponseWrapper struct {
 //
 // responses:
 //    200: requestTypeListing
+//    500: errorResponse
 
 // Request type listing response
 // swagger:response requestTypeListing
@@ -67,6 +68,7 @@ type requestTypeListingWrapper struct {
 // responses:
 //   200: requestType
 //   400: errorResponse
+//   500: errorResponse
 
 // swagger:route GET /request-types/{name} request-types getRequestType
 //
@@ -77,6 +79,7 @@ type requestTypeListingWrapper struct {
 // responses:
 //   200: requestType
 //   404: errorResponse
+//   500: errorResponse
 
 // Request type response
 // swagger:response requestType
@@ -92,6 +95,11 @@ type registerRequestTypeParameters struct {
 	//
 	// in:path
 	Name string
+
+	// the maximum number of requests of the given type that a user may submit
+	//
+	// in:query
+	MaximumRequestsPerUser *int32 `json:"maximum-requests-per-user"`
 }
 
 // swagger:route GET /request-status-codes request-status-codes getRequestStatusCodes
@@ -102,6 +110,7 @@ type registerRequestTypeParameters struct {
 //
 // responses:
 //    200: requestStatusCodeListing
+//    500: errorResponse
 
 // Request status code listing response
 // swagger:response requestStatusCodeListing
@@ -118,6 +127,8 @@ type requestStatusCodeListingWrapper struct {
 //
 // Responses:
 //   200: requestSummary
+//   400: errorResponse
+//   500: errorResponse
 
 // Request summary information
 // swagger:response requestSummary
@@ -149,6 +160,8 @@ type requestSubmissionParameters struct {
 //
 // Responses:
 //   200: requestListing
+//   400: errorResponse
+//   500: errorResponse
 
 // Request listing
 // swagger:response requestListing
@@ -184,6 +197,8 @@ type requestListingParameters struct {
 //
 // Responses:
 //   200: requestDetails
+//   404: errorResponse
+//   500: errorResponse
 
 // Request detail information
 // swagger:response requestDetails
@@ -209,6 +224,9 @@ type getRequestInformationParameters struct {
 //
 // Responses:
 //   200: requestUpdate
+//   400: errorResponse
+//   404: errorResponse
+//   500: errorResponse
 
 // Request update information
 // swagger:response requestUpdate
