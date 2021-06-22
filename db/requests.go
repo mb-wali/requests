@@ -31,6 +31,37 @@ func CountRequestsOfType(tx *sql.Tx, userID, requestTypeID string) (int32, error
 	return count, err
 }
 
+// CountActiveRequestsOfType counts the number of active requests of the given type that have been submitted by the
+// given user.
+func CountActiveRequestsOfType(tx *sql.Tx, userID, requestTypeID string) (int32, error) {
+
+	// Prepare the primary query.
+	subquery := psql.Select().
+		Column("r.id").
+		Column("last(rsc.name) OVER w AS status").
+		From("requests r").
+		Join("request_updates ru ON r.id = ru.request_id").
+		Join("request_status_codes rsc ON ru.request_status_code_id = rsc.id").
+		Where(sq.Eq{"requesting_user_id": userID}).
+		Where(sq.Eq{"request_type_id": requestTypeID}).
+		Suffix("WINDOW w AS (" +
+			"PARTITION BY ru.request_id " +
+			"ORDER BY ru.created_date " +
+			"RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)")
+
+	// Prepare the query.
+	query, args, err := psql.Select("count(*)").
+		FromSelect(subquery, "subquery").
+		Where(sq.NotEq{"status": []string{"approved", "rejected"}}).
+		ToSql()
+
+	// Query the database and extract the count.
+	var count int32
+	row := tx.QueryRow(query, args...)
+	err = row.Scan(&count)
+	return count, err
+}
+
 // AddRequest adds a new request to the database.
 func AddRequest(tx *sql.Tx, userID, requestTypeID string, details interface{}) (string, error) {
 	query := `INSERT INTO requests (request_type_id, requesting_user_id, details)

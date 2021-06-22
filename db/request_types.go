@@ -15,7 +15,7 @@ func requestTypesFromRows(rows *sql.Rows) ([]*model.RequestType, error) {
 	// Build the list of request types.
 	for rows.Next() {
 		var rt model.RequestType
-		err := rows.Scan(&rt.ID, &rt.Name, &rt.MaximumRequestsPerUser)
+		err := rows.Scan(&rt.ID, &rt.Name, &rt.MaximumRequestsPerUser, &rt.MaximumConcurrentRequestsPerUser)
 		if err != nil {
 			return nil, err
 		}
@@ -27,7 +27,9 @@ func requestTypesFromRows(rows *sql.Rows) ([]*model.RequestType, error) {
 
 // ListRequestTypes returns a listing of request types from the database sorted by name.
 func ListRequestTypes(tx *sql.Tx) ([]*model.RequestType, error) {
-	query := "SELECT id, name, maximum_requests_per_user FROM request_types ORDER BY name"
+	query := `SELECT id, name, maximum_requests_per_user, maximum_concurrent_requests_per_user
+	          FROM request_types
+			  ORDER BY name`
 
 	// Query the database.
 	rows, err := tx.Query(query)
@@ -42,7 +44,9 @@ func ListRequestTypes(tx *sql.Tx) ([]*model.RequestType, error) {
 
 // GetRequestType returns the request type with the given name if it exists.
 func GetRequestType(tx *sql.Tx, name string) (*model.RequestType, error) {
-	query := "SELECT id, name, maximum_requests_per_user FROM request_types WHERE name = $1"
+	query := `SELECT id, name, maximum_requests_per_user, maximum_concurrent_requests_per_user
+	          FROM request_types
+			  WHERE name = $1`
 
 	// Query the database.
 	rows, err := tx.Query(query, name)
@@ -63,13 +67,15 @@ func GetRequestType(tx *sql.Tx, name string) (*model.RequestType, error) {
 }
 
 // AddRequestType adds a request type with the given name.
-func AddRequestType(tx *sql.Tx, name string, maximumRequestsPerUser *int32) (*model.RequestType, error) {
-	query := `INSERT INTO request_types (name, maximum_requests_per_user)
-			  VALUES ($1, $2)
-			  RETURNING id, name, maximum_requests_per_user`
+func AddRequestType(tx *sql.Tx, name string, maximumRequestsPerUser, maximumConcurrentRequestsPerUser *int32) (
+	*model.RequestType, error,
+) {
+	query := `INSERT INTO request_types (name, maximum_requests_per_user, maximum_concurrent_requests_per_user)
+			  VALUES ($1, $2, $3)
+			  RETURNING id, name, maximum_requests_per_user, maximum_concurrent_requests_per_user`
 
 	// Insert the new request type.
-	rows, err := tx.Query(query, name, maximumRequestsPerUser)
+	rows, err := tx.Query(query, name, maximumRequestsPerUser, maximumConcurrentRequestsPerUser)
 	if err != nil {
 		return nil, err
 	}

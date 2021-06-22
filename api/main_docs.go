@@ -100,6 +100,11 @@ type registerRequestTypeParameters struct {
 	//
 	// in:query
 	MaximumRequestsPerUser *int32 `json:"maximum-requests-per-user"`
+
+	// the maximum number of active requests that a user may have submitted at any given time
+	//
+	// in:query
+	MaximumConcurrentRequestsPerUser *int32 `json:"maximum-concurrent-requests-per-user"`
 }
 
 // swagger:route GET /request-status-codes request-status-codes getRequestStatusCodes

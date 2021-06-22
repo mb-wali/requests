@@ -73,6 +73,21 @@ func (a *API) RegisterRequestTypeHandler(ctx echo.Context) error {
 		})
 	}
 
+	// Get the maximum number of concurrent requestws per user for this request type and validate it.
+	maximumConcurrentRequestsPerUser, err := query.ValidateOptionalIntQueryParam(
+		ctx, "maximum-concurrent-requests-per-user",
+	)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+	if maximumConcurrentRequestsPerUser != nil && *maximumConcurrentRequestsPerUser <= 0 {
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: "maximum-concurrent-requests-per-user must be a positive integer if specified",
+		})
+	}
+
 	// Start a transaction.
 	tx, err := a.DB.Begin()
 	if err != nil {
@@ -94,7 +109,7 @@ func (a *API) RegisterRequestTypeHandler(ctx echo.Context) error {
 	}
 
 	// The request type doesn't exist yet. Add it.
-	requestType, err = db.AddRequestType(tx, name, maximumRequestsPerUser)
+	requestType, err = db.AddRequestType(tx, name, maximumRequestsPerUser, maximumConcurrentRequestsPerUser)
 	if err != nil {
 		return err
 	}
