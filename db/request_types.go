@@ -67,13 +67,15 @@ func GetRequestType(tx *sql.Tx, name string) (*model.RequestType, error) {
 }
 
 // AddRequestType adds a request type with the given name.
-func AddRequestType(tx *sql.Tx, name string, maximumRequestsPerUser *int32) (*model.RequestType, error) {
-	query := `INSERT INTO request_types (name, maximum_requests_per_user)
-			  VALUES ($1, $2)
-			  RETURNING id, name, maximum_requests_per_user`
+func AddRequestType(tx *sql.Tx, name string, maximumRequestsPerUser, maximumConcurrentRequestsPerUser *int32) (
+	*model.RequestType, error,
+) {
+	query := `INSERT INTO request_types (name, maximum_requests_per_user, maximum_concurrent_requests_per_user)
+			  VALUES ($1, $2, $3)
+			  RETURNING id, name, maximum_requests_per_user, maximum_concurrent_requests_per_user`
 
 	// Insert the new request type.
-	rows, err := tx.Query(query, name, maximumRequestsPerUser)
+	rows, err := tx.Query(query, name, maximumRequestsPerUser, maximumConcurrentRequestsPerUser)
 	if err != nil {
 		return nil, err
 	}
