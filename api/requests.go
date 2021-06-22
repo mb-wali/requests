@@ -88,7 +88,7 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 		})
 	}
 
-	// Verify that the user is permitted to submit more requests of this type if there's a limit.
+	// Verify that the user is permitted to submit more requests of this type if there's an overall limit.
 	if requestType.MaximumRequestsPerUser != nil {
 		count, err := db.CountRequestsOfType(tx, userID, requestType.ID)
 		if err != nil {
@@ -102,6 +102,25 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 					"requestType":       requestType.Name,
 					"maximumRequests":   *requestType.MaximumRequestsPerUser,
 					"submittedRequests": count,
+				},
+			})
+		}
+	}
+
+	// Verify that the user is permitted to submit more requests of this type if there's an active limit.
+	if requestType.MaximumConcurrentRequestsPerUser != nil {
+		count, err := db.CountActiveRequestsOfType(tx, userID, requestType.ID)
+		if err != nil {
+			return err
+		}
+		if count >= *requestType.MaximumConcurrentRequestsPerUser {
+			return ctx.JSON(http.StatusBadRequest, ErrorResponse{
+				Message:   fmt.Sprintf("no more active requests of type '%s' may be submitted", requestType.Name),
+				ErrorCode: "ERR_LIMIT_REACHED",
+				Details: &map[string]interface{}{
+					"requestType":             requestType.Name,
+					"maximumActiveRequests":   *requestType.MaximumConcurrentRequestsPerUser,
+					"activeSubmittedRequests": count,
 				},
 			})
 		}
