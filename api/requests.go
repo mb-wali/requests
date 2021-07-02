@@ -156,6 +156,7 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 	// Add required information to a copy of the request details.
 	requestDetails := copyRequestDetails(requestSubmission.Details.(map[string]interface{}))
 	requestDetails["username"] = user
+	requestDetails["request_id"] = requestID
 	requestDetails["request_type"] = requestType.Name
 	requestDetails["request_details"] = humanReadableRequestDetails
 
@@ -347,6 +348,9 @@ func (a *API) UpdateRequestHandler(ctx echo.Context) error {
 
 	// Add required information to a copy of the request details.
 	requestDetails := copyRequestDetails(request.Details.(map[string]interface{}))
+	requestDetails["username"] = request.RequestingUser
+	requestDetails["request_id"] = request.ID
+	requestDetails["request_type"] = request.RequestType
 	requestDetails["request_details"] = humanReadableRequestDetails
 	requestDetails["update_message"] = update.Message
 	requestDetails["email_address"] = requestingUserInfo.Email
