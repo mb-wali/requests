@@ -41,7 +41,7 @@ spec:
                 path: jobservices.yml
       containers:
         - name: requests
-          image: discoenv/requests
+          image: harbor.cyverse.org/de/requests
           resources:
             requests:
               cpu: "1m"
