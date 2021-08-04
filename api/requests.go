@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -22,16 +21,6 @@ func copyRequestDetails(requestDetails map[string]interface{}) map[string]interf
 		copy[k] = v
 	}
 	return copy
-}
-
-// formatRequestDetails builds a human readable representation of a set of request details. For now, we're just going
-// to turn it into a pretty-printed JSON document.
-func formatRequestDetails(requestDetails map[string]interface{}) (string, error) {
-	formattedDetails, err := json.MarshalIndent(requestDetails, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(formattedDetails), nil
 }
 
 // AddRequestHandler handles POST requests to the /requests endpoint.
@@ -147,18 +136,12 @@ func (a *API) AddRequestHandler(ctx echo.Context) error {
 		return err
 	}
 
-	// Format a human readable copy of the request submission details.
-	humanReadableRequestDetails, err := formatRequestDetails(requestSubmission.Details.(map[string]interface{}))
-	if err != nil {
-		return err
-	}
-
 	// Add required information to a copy of the request details.
 	requestDetails := copyRequestDetails(requestSubmission.Details.(map[string]interface{}))
 	requestDetails["username"] = user
 	requestDetails["request_id"] = requestID
 	requestDetails["request_type"] = requestType.Name
-	requestDetails["request_details"] = humanReadableRequestDetails
+	requestDetails["request_details"] = requestSubmission.Details.(map[string]interface{})
 
 	// Send the email.
 	err = a.IPlantEmailClient.SendRequestSubmittedEmail(a.AdminEmail, requestStatusCode.EmailTemplate, requestDetails)
@@ -340,18 +323,12 @@ func (a *API) UpdateRequestHandler(ctx echo.Context) error {
 		return err
 	}
 
-	// Format a human readable copy of the request submission details.
-	humanReadableRequestDetails, err := formatRequestDetails(request.Details.(map[string]interface{}))
-	if err != nil {
-		return err
-	}
-
 	// Add required information to a copy of the request details.
 	requestDetails := copyRequestDetails(request.Details.(map[string]interface{}))
 	requestDetails["username"] = request.RequestingUser
 	requestDetails["request_id"] = request.ID
 	requestDetails["request_type"] = request.RequestType
-	requestDetails["request_details"] = humanReadableRequestDetails
+	requestDetails["request_details"] = request.Details.(map[string]interface{})
 	requestDetails["update_message"] = update.Message
 	requestDetails["email_address"] = requestingUserInfo.Email
 	requestDetails["action"] = "request_status_change"
