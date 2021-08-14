@@ -85,8 +85,8 @@ type requestTypeListingWrapper struct {
 //
 // Update a Request Type
 //
-// This endpoint updates an existing request type if a request type if it exists. The name cannot be changed, but
-// all other settings can be updated. If the request type doesn't exist then the endpoint returns status code 404.
+// This endpoint updates an existing request type if it exists. The name cannot be changed, but all other settings can
+// be updated. If the request type doesn't exist then the endpoint returns status code 404.
 //
 // responses:
 //   200: requestType
