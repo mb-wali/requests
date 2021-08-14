@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/cyverse-de/requests/model"
 )
 
@@ -90,6 +91,45 @@ func AddRequestType(tx *sql.Tx, name string, maximumRequestsPerUser, maximumConc
 	// We should have a result.
 	if len(requestTypes) == 0 {
 		return nil, fmt.Errorf("unable to retrieve request type information after registration")
+	}
+	return requestTypes[0], nil
+}
+
+// UpdateRequestType updates the request type with the given name.
+func UpdateRequestType(tx *sql.Tx, name string, maximumRequestsPerUser, maximumConcurrentRequestsPerUser *int32) (
+	*model.RequestType, error,
+) {
+
+	// Build the query.
+	builder := psql.Update("request_types").
+		Where(sq.Eq{"name": name}).
+		Suffix("RETURNING id, name, maximum_requests_per_user, maximum_concurrent_requests_per_user")
+	if maximumRequestsPerUser != nil && *maximumRequestsPerUser >= 0 {
+		builder = builder.Set("maximum_requests_per_user", *maximumRequestsPerUser)
+	}
+	if maximumConcurrentRequestsPerUser != nil && *maximumConcurrentRequestsPerUser >= 0 {
+		builder = builder.Set("maximum_concurrent_requests_per_user", *maximumConcurrentRequestsPerUser)
+	}
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	// Execute the statement.
+	rows, err := tx.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the request type information.
+	requestTypes, err := requestTypesFromRows(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	// We should have a result.
+	if len(requestTypes) == 0 {
+		return nil, fmt.Errorf("unable to retrieve updated request type information")
 	}
 	return requestTypes[0], nil
 }

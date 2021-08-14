@@ -130,6 +130,7 @@ func main() {
 	e.GET("/", a.RootHandler)
 	e.GET("/request-types", a.GetRequestTypesHandler)
 	e.POST("/request-types/:name", a.RegisterRequestTypeHandler)
+	e.PATCH("/request-types/:name", a.UpdateRequestTypesHandler)
 	e.GET("/request-types/:name", a.GetRequestTypeHandler)
 	e.GET("/request-status-codes", a.GetRequestStatusCodesHandler)
 	e.GET("/requests", a.GetRequestsHandler)

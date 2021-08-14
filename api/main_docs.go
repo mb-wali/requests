@@ -81,6 +81,18 @@ type requestTypeListingWrapper struct {
 //   404: errorResponse
 //   500: errorResponse
 
+// swagger:route PATCH /request-types/{name} request-types updateRequestType
+//
+// Update a Request Type
+//
+// This endpoint updates an existing request type if it exists. The name cannot be changed, but all other settings can
+// be updated. If the request type doesn't exist then the endpoint returns status code 404.
+//
+// responses:
+//   200: requestType
+//   400: errorResponse
+//   500: errorResponse
+
 // Request type response
 // swagger:response requestType
 type requestTypeWrapper struct {
@@ -89,7 +101,7 @@ type requestTypeWrapper struct {
 }
 
 // Parameters for registering a request type
-// swagger:parameters registerRequestType getRequestType
+// swagger:parameters registerRequestType getRequestType updateRequestType
 type registerRequestTypeParameters struct {
 	// the name of the request type being registered
 	//
