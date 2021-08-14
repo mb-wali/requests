@@ -159,7 +159,7 @@ func (a *API) UpdateRequestTypesHandler(ctx echo.Context) error {
 		})
 	}
 
-	// Get the maximum number of concurrent requestws per user for this request type and validate it.
+	// Get the maximum number of concurrent requests per user for this request type and validate it.
 	maximumConcurrentRequestsPerUser, err := query.ValidateOptionalIntQueryParam(
 		ctx, "maximum-concurrent-requests-per-user",
 	)
