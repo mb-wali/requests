@@ -24,7 +24,7 @@ import (
 
 var (
 	cfgPath = flag.String("config", "/etc/iplant/de/jobservices.yml", "The path to the config file")
-	port    = flag.String("port", "8080", "The port to listen to")
+	port    = flag.String("port", "8081", "The port to listen to")
 	debug   = flag.Bool("debug", false, "Enable debug logging")
 )
 
